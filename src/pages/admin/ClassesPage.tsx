@@ -23,6 +23,19 @@ export default function ClassesPage() {
     queryFn: () => schoolApi.list().then((r) => r.data.data),
   });
 
+  const { data: divisionCounts } = useQuery({
+    queryKey: ["division-counts", classes?.map((c) => c.id)],
+    queryFn: async () => {
+      const results = await Promise.all(
+        classes!.map((c) =>
+          classApi.listDivisions(c.id).then((r) => [c.id, r.data.data.length] as const)
+        )
+      );
+      return Object.fromEntries(results) as Record<string, number>;
+    },
+    enabled: !!classes?.length,
+  });
+
   const createMutation = useMutation({
     mutationFn: () => classApi.create({ name: form.name, schoolId: form.schoolId, teacherId: form.teacherId || undefined }),
     onSuccess: (res) => {
@@ -116,7 +129,7 @@ export default function ClassesPage() {
               <Link to={`/admin/classes/${cls.id}`}>
                 <h3 className="mt-4 font-semibold text-foreground">{cls.name}</h3>
                 <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
-                  <Layers size={14} /> {cls.divisions?.length || 0} divisions
+                  <Layers size={14} /> {divisionCounts?.[cls.id] ?? 0} divisions
                 </p>
                 <p className="mt-2 font-mono text-xs text-muted-foreground">{cls.id}</p>
               </Link>

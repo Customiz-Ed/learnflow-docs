@@ -23,9 +23,11 @@ const navByRole: Record<Role, NavItem[]> = {
   ],
   teacher: [
     { label: "Dashboard", path: "/teacher/dashboard", icon: <LayoutDashboard size={20} /> },
+    { label: "Classes", path: "/teacher/classes", icon: <BookOpen size={20} /> },
     { label: "Students", path: "/teacher/students", icon: <Users size={20} /> },
     { label: "Enrollments", path: "/teacher/enrollments", icon: <UserCheck size={20} /> },
     { label: "Tests", path: "/teacher/tests", icon: <FileText size={20} /> },
+    { label: "Generate Baseline", path: "/teacher/tests/generate-baseline", icon: <FileText size={20} /> },
     { label: "Profile", path: "/teacher/profile", icon: <User size={20} /> },
   ],
   student: [

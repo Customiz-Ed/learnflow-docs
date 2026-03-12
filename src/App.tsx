@@ -18,11 +18,14 @@ import ClassDetailPage from "./pages/admin/ClassDetailPage";
 import TeacherLoginPage from "./pages/teacher/TeacherLoginPage";
 import TeacherRegisterPage from "./pages/teacher/TeacherRegisterPage";
 import TeacherDashboard from "./pages/teacher/TeacherDashboard";
+import TeacherClassesPage from "./pages/teacher/TeacherClassesPage";
+import TeacherClassDetailPage from "./pages/teacher/TeacherClassDetailPage";
 import TeacherStudentsPage from "./pages/teacher/TeacherStudentsPage";
 import TeacherEnrollmentsPage from "./pages/teacher/TeacherEnrollmentsPage";
 import TeacherTestsPage from "./pages/teacher/TeacherTestsPage";
 import TeacherTestDetailPage from "./pages/teacher/TeacherTestDetailPage";
 import TeacherTestCreatePage from "./pages/teacher/TeacherTestCreatePage";
+import TeacherGenerateBaselineTest from "./pages/teacher/TeacherGenerateBaselineTest";
 import TeacherProfilePage from "./pages/teacher/TeacherProfilePage";
 
 import StudentLoginPage from "./pages/student/StudentLoginPage";
@@ -71,10 +74,13 @@ const App = () => (
 
             {/* Teacher */}
             <Route path="/teacher/dashboard" element={<ProtectedRoute allowedRoles={["teacher"]}><AppLayout><TeacherDashboard /></AppLayout></ProtectedRoute>} />
+            <Route path="/teacher/classes" element={<ProtectedRoute allowedRoles={["teacher"]}><AppLayout><TeacherClassesPage /></AppLayout></ProtectedRoute>} />
+            <Route path="/teacher/classes/:id" element={<ProtectedRoute allowedRoles={["teacher"]}><AppLayout><TeacherClassDetailPage /></AppLayout></ProtectedRoute>} />
             <Route path="/teacher/students" element={<ProtectedRoute allowedRoles={["teacher"]}><AppLayout><TeacherStudentsPage /></AppLayout></ProtectedRoute>} />
             <Route path="/teacher/enrollments" element={<ProtectedRoute allowedRoles={["teacher"]}><AppLayout><TeacherEnrollmentsPage /></AppLayout></ProtectedRoute>} />
             <Route path="/teacher/tests" element={<ProtectedRoute allowedRoles={["teacher"]}><AppLayout><TeacherTestsPage /></AppLayout></ProtectedRoute>} />
             <Route path="/teacher/tests/new" element={<ProtectedRoute allowedRoles={["teacher"]}><AppLayout><TeacherTestCreatePage /></AppLayout></ProtectedRoute>} />
+            <Route path="/teacher/tests/generate-baseline" element={<ProtectedRoute allowedRoles={["teacher"]}><AppLayout><TeacherGenerateBaselineTest /></AppLayout></ProtectedRoute>} />
             <Route path="/teacher/tests/:id" element={<ProtectedRoute allowedRoles={["teacher"]}><AppLayout><TeacherTestDetailPage /></AppLayout></ProtectedRoute>} />
             <Route path="/teacher/profile" element={<ProtectedRoute allowedRoles={["teacher"]}><AppLayout><TeacherProfilePage /></AppLayout></ProtectedRoute>} />
 

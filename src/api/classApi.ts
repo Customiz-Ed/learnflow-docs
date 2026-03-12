@@ -17,6 +17,9 @@ export const classApi = {
   remove: (id: string) =>
     api.delete<ApiResponse<null>>(`/classes/${id}`),
 
+  getByTeacher: (teacherId: string) =>
+    api.get<ApiResponse<Class[]>>(`/classes/teacher/${teacherId}`),
+
   createDivision: (classId: string, data: { name: string; teacherId?: string }) =>
     api.post<ApiResponse<Division>>(`/classes/${classId}/divisions`, data),
 

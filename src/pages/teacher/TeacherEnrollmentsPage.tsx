@@ -21,7 +21,7 @@ export default function TeacherEnrollmentsPage() {
       queryClient.invalidateQueries({ queryKey: ["pending-enrollments"] });
       queryClient.invalidateQueries({ queryKey: ["teacher-students"] });
     },
-    onError: (err: any) => toast.error(err.response?.data?.message || "Failed"),
+    onError: (err: any) => {toast.error(err.response?.data?.message || "Failed"), console.error(err)},
   });
 
   return (

@@ -42,4 +42,22 @@ export const testApi = {
 
   submitAttempt: (attemptId: string, data: { answers: Array<{ questionId: string; optionId: string }> }) =>
     api.post<ApiResponse<TestAttempt>>(`/tests/attempts/${attemptId}/submit`, data),
+
+  getUploadUrl: (data: { fileName: string; fileHash: string }) =>
+    api.post<ApiResponse<{ uploadUrl: string | null; key: string; bucket: string; alreadyExists: boolean }>>("/tests/upload-url", data),
+
+  generateBaselineFromS3: (data: {
+    s3Key: string;
+    grade: string;
+    subject: string;
+    classId: string;
+    divisionId: string;
+    testName?: string;
+    numberOfQuestions: number;
+    difficulty: string;
+  }) =>
+    api.post<ApiResponse<{ id: string; status: "QUEUED" | "PROCESSING" }>>("/tests/generate-baseline", data),
+
+  getBaselineGenerationJob: (jobId: string) =>
+    api.get<ApiResponse<{ id: string; status: "QUEUED" | "PROCESSING" | "COMPLETED" | "FAILED"; errorMessage?: string; generatedTestId?: string }>>(`/tests/generate-baseline/${jobId}`),
 };
