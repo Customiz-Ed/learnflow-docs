@@ -21,7 +21,16 @@ export default function TeacherRegisterPage() {
         { name: "email", label: "Email", type: "email", placeholder: "jane@school.edu" },
         { name: "phone", label: "Phone", type: "tel", placeholder: "+1 234 567 8900" },
         { name: "password", label: "Password", type: "password", placeholder: "••••••••" },
-        { name: "schoolId", label: "School ID", type: "text", placeholder: "Select school (ID)" },
+        {
+          name: "schoolId",
+          label: "School",
+          type: "search-select",
+          placeholder: "Type school name to search...",
+          options: schools.map((school) => ({
+            label: school.name,
+            value: school.id,
+          })),
+        },
       ]}
       onSubmit={async (data) => {
         const res = await teacherApi.register({
