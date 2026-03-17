@@ -20,6 +20,7 @@ const navByRole: Record<Role, NavItem[]> = {
     { label: "Dashboard", path: "/admin/dashboard", icon: <LayoutDashboard size={20} /> },
     { label: "Schools", path: "/admin/schools", icon: <School size={20} /> },
     { label: "Classes", path: "/admin/classes", icon: <BookOpen size={20} /> },
+    { label: "LSA Bank", path: "/admin/lsa-questions", icon: <Settings size={20} /> },
   ],
   teacher: [
     { label: "Dashboard", path: "/teacher/dashboard", icon: <LayoutDashboard size={20} /> },
@@ -27,13 +28,14 @@ const navByRole: Record<Role, NavItem[]> = {
     { label: "Students", path: "/teacher/students", icon: <Users size={20} /> },
     { label: "Enrollments", path: "/teacher/enrollments", icon: <UserCheck size={20} /> },
     { label: "Tests", path: "/teacher/tests", icon: <FileText size={20} /> },
+    { label: "Reports", path: "/teacher/reports", icon: <BarChart3 size={20} /> },
     { label: "Generate Baseline", path: "/teacher/tests/generate-baseline", icon: <FileText size={20} /> },
     { label: "Profile", path: "/teacher/profile", icon: <User size={20} /> },
   ],
   student: [
     { label: "Dashboard", path: "/student/dashboard", icon: <LayoutDashboard size={20} /> },
     { label: "Tests", path: "/student/tests", icon: <FileText size={20} /> },
-    { label: "Report", path: "/student/report", icon: <BarChart3 size={20} /> },
+    { label: "Reports", path: "/student/reports", icon: <BarChart3 size={20} /> },
     { label: "Profile", path: "/student/profile", icon: <User size={20} /> },
   ],
   parent: [

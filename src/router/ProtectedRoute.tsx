@@ -19,5 +19,12 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
     return <Navigate to={`/${role}/dashboard`} replace />;
   }
 
+  if (role === "student") {
+    const requiresPasswordChange = localStorage.getItem("studentRequiresPasswordChange") === "true";
+    if (requiresPasswordChange && location.pathname !== "/student/change-password") {
+      return <Navigate to="/student/change-password" replace />;
+    }
+  }
+
   return <>{children}</>;
 }

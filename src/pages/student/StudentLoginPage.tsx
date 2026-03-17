@@ -13,8 +13,15 @@ export default function StudentLoginPage() {
       ]}
       onSubmit={async (data) => {
         const res = await studentApi.login({ username: data.username, password: data.password });
-        const { student, token } = res.data.data;
-        return { token, id: student.id, name: student.name };
+        const { student, token, requiresPasswordChange } = res.data.data;
+        const mustChangePassword = Boolean(requiresPasswordChange ?? student.requiresPasswordChange);
+        localStorage.setItem("studentRequiresPasswordChange", mustChangePassword ? "true" : "false");
+        return {
+          token,
+          id: student.id,
+          name: student.name,
+          redirectTo: mustChangePassword ? "/student/change-password" : "/student/dashboard",
+        };
       }}
       registerLink={{ label: "Create an account", path: "/student/register" }}
       otherLogins={[

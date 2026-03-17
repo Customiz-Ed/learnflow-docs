@@ -1,5 +1,14 @@
 import api from "./axios";
-import type { ApiResponse, Test, TestAttempt } from "@/types/api.types";
+import type {
+  ApiResponse,
+  StudentBaselineSuitePayload,
+  StartAttemptRequest,
+  SubmitAttemptRequest,
+  SubmitAttemptResult,
+  TeacherBaselineGenerationJob,
+  Test,
+  TestAttempt,
+} from "@/types/api.types";
 
 interface TestCreateData {
   name: string;
@@ -35,15 +44,15 @@ export const testApi = {
     api.delete<ApiResponse<null>>(`/tests/${id}`),
 
   getBaseline: () =>
-    api.get<ApiResponse<Test | null>>("/tests/baseline"),
+    api.get<ApiResponse<StudentBaselineSuitePayload>>("/tests/baseline"),
 
-  startAttempt: (data: { testId: string }) =>
+  startAttempt: (data: StartAttemptRequest) =>
     api.post<ApiResponse<TestAttempt>>("/tests/attempts", data),
 
-  submitAttempt: (attemptId: string, data: { answers: Array<{ questionId: string; optionId: string }> }) =>
-    api.post<ApiResponse<TestAttempt>>(`/tests/attempts/${attemptId}/submit`, data),
+  submitAttempt: (attemptId: string, data: SubmitAttemptRequest) =>
+    api.post<ApiResponse<SubmitAttemptResult>>(`/tests/attempts/${attemptId}/submit`, data),
 
-  getUploadUrl: (data: { fileName: string; fileHash: string }) =>
+  getUploadUrl: (data: { fileName: string; fileHash?: string }) =>
     api.post<ApiResponse<{ uploadUrl: string | null; key: string; bucket: string; alreadyExists: boolean }>>("/tests/upload-url", data),
 
   generateBaselineFromS3: (data: {
@@ -59,5 +68,5 @@ export const testApi = {
     api.post<ApiResponse<{ id: string; status: "QUEUED" | "PROCESSING" }>>("/tests/generate-baseline", data),
 
   getBaselineGenerationJob: (jobId: string) =>
-    api.get<ApiResponse<{ id: string; status: "QUEUED" | "PROCESSING" | "COMPLETED" | "FAILED"; errorMessage?: string; generatedTestId?: string }>>(`/tests/generate-baseline/${jobId}`),
+    api.get<ApiResponse<TeacherBaselineGenerationJob & { generatedTest?: Test | null }>>(`/tests/generate-baseline/${jobId}`),
 };

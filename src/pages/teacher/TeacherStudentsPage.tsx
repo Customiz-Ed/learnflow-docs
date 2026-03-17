@@ -24,7 +24,8 @@ export default function TeacherStudentsPage() {
               <tr className="border-b border-border text-left">
                 <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Name</th>
                 <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Username</th>
-                <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Grade</th>
+                <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Class</th>
+                <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Division</th>
                 <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Baseline</th>
               </tr>
             </thead>
@@ -34,7 +35,8 @@ export default function TeacherStudentsPage() {
                   className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors">
                   <td className="px-6 py-4 text-sm font-medium text-foreground">{s.name}</td>
                   <td className="px-6 py-4 font-mono text-sm text-muted-foreground">{s.username}</td>
-                  <td className="px-6 py-4 text-sm tabular-nums text-foreground">{s.grade}</td>
+                  <td className="px-6 py-4 text-sm text-foreground">{s.className || "-"}</td>
+                  <td className="px-6 py-4 text-sm text-foreground">{s.divisionName || "-"}</td>
                   <td className="px-6 py-4">
                     <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
                       s.baselineCompleted ? "bg-success/10 text-success" : "bg-warning/10 text-warning"

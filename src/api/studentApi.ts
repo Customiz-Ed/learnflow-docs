@@ -1,12 +1,22 @@
 import api from "./axios";
-import type { ApiResponse, Student, EnrollmentRequest, StudentReport } from "@/types/api.types";
+import type {
+  ApiResponse,
+  Student,
+  EnrollmentRequest,
+  StudentReport,
+  StudentLoginPayload,
+  StudentPasswordChangePayload,
+} from "@/types/api.types";
 
 export const studentApi = {
   register: (data: { username: string; name: string; password: string; age?: number; grade: number; schoolId: string; divisionId: string }) =>
     api.post<ApiResponse<{ student: Student; enrollmentRequest: EnrollmentRequest; token: string }>>("/students/register", data),
 
   login: (data: { username: string; password: string }) =>
-    api.post<ApiResponse<{ student: Student; token: string }>>("/students/login", data),
+    api.post<ApiResponse<StudentLoginPayload>>("/students/login", data),
+
+  changePassword: (data: { currentPassword: string; newPassword: string }) =>
+    api.put<ApiResponse<StudentPasswordChangePayload>>("/students/me/change-password", data),
 
   getMe: () =>
     api.get<ApiResponse<Student>>("/students/me"),

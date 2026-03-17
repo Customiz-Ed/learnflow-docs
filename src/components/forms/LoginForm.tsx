@@ -19,7 +19,7 @@ interface LoginFormProps {
   title: string;
   subtitle: string;
   fields: AuthField[];
-  onSubmit: (data: Record<string, string>) => Promise<{ token: string; id: string; name: string }>;
+  onSubmit: (data: Record<string, string>) => Promise<{ token: string; id: string; name: string; redirectTo?: string }>;
   registerLink?: { label: string; path: string };
   otherLogins?: Array<{ label: string; path: string; role: string }>;
 }
@@ -38,7 +38,7 @@ export function LoginForm({ role, title, subtitle, fields, onSubmit, registerLin
       const result = await onSubmit(formData);
       login(result.token, role, result.id, result.name);
       toast.success("Welcome back!");
-      navigate(`/${role}/dashboard`);
+      navigate(result.redirectTo || `/${role}/dashboard`);
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Login failed");
     } finally {

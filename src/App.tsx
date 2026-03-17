@@ -14,6 +14,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import SchoolsPage from "./pages/admin/SchoolsPage";
 import ClassesPage from "./pages/admin/ClassesPage";
 import ClassDetailPage from "./pages/admin/ClassDetailPage";
+import AdminLsaQuestionsPage from "./pages/admin/AdminLsaQuestionsPage";
 
 import TeacherLoginPage from "./pages/teacher/TeacherLoginPage";
 import TeacherRegisterPage from "./pages/teacher/TeacherRegisterPage";
@@ -26,7 +27,10 @@ import TeacherTestsPage from "./pages/teacher/TeacherTestsPage";
 import TeacherTestDetailPage from "./pages/teacher/TeacherTestDetailPage";
 import TeacherTestCreatePage from "./pages/teacher/TeacherTestCreatePage";
 import TeacherGenerateBaselineTest from "./pages/teacher/TeacherGenerateBaselineTest";
+import TeacherBaselineSuitePage from "./pages/teacher/TeacherBaselineSuitePage";
 import TeacherProfilePage from "./pages/teacher/TeacherProfilePage";
+import TeacherReportsPage from "./pages/teacher/TeacherReportsPage";
+import TeacherStudentReportPage from "./pages/teacher/TeacherStudentReportPage";
 
 import StudentLoginPage from "./pages/student/StudentLoginPage";
 import StudentRegisterPage from "./pages/student/StudentRegisterPage";
@@ -35,6 +39,7 @@ import StudentTestsPage from "./pages/student/StudentTestsPage";
 import StudentTestAttemptPage from "./pages/student/StudentTestAttemptPage";
 import StudentReportPage from "./pages/student/StudentReportPage";
 import StudentProfilePage from "./pages/student/StudentProfilePage";
+import StudentChangePasswordPage from "./pages/student/StudentChangePasswordPage";
 
 import ParentLoginPage from "./pages/parent/ParentLoginPage";
 import ParentRegisterPage from "./pages/parent/ParentRegisterPage";
@@ -71,6 +76,7 @@ const App = () => (
             <Route path="/admin/schools" element={<ProtectedRoute allowedRoles={["admin"]}><AppLayout><SchoolsPage /></AppLayout></ProtectedRoute>} />
             <Route path="/admin/classes" element={<ProtectedRoute allowedRoles={["admin"]}><AppLayout><ClassesPage /></AppLayout></ProtectedRoute>} />
             <Route path="/admin/classes/:id" element={<ProtectedRoute allowedRoles={["admin"]}><AppLayout><ClassDetailPage /></AppLayout></ProtectedRoute>} />
+            <Route path="/admin/lsa-questions" element={<ProtectedRoute allowedRoles={["admin"]}><AppLayout><AdminLsaQuestionsPage /></AppLayout></ProtectedRoute>} />
 
             {/* Teacher */}
             <Route path="/teacher/dashboard" element={<ProtectedRoute allowedRoles={["teacher"]}><AppLayout><TeacherDashboard /></AppLayout></ProtectedRoute>} />
@@ -79,8 +85,11 @@ const App = () => (
             <Route path="/teacher/students" element={<ProtectedRoute allowedRoles={["teacher"]}><AppLayout><TeacherStudentsPage /></AppLayout></ProtectedRoute>} />
             <Route path="/teacher/enrollments" element={<ProtectedRoute allowedRoles={["teacher"]}><AppLayout><TeacherEnrollmentsPage /></AppLayout></ProtectedRoute>} />
             <Route path="/teacher/tests" element={<ProtectedRoute allowedRoles={["teacher"]}><AppLayout><TeacherTestsPage /></AppLayout></ProtectedRoute>} />
+            <Route path="/teacher/reports" element={<ProtectedRoute allowedRoles={["teacher"]}><AppLayout><TeacherReportsPage /></AppLayout></ProtectedRoute>} />
+            <Route path="/teacher/reports/:studentId" element={<ProtectedRoute allowedRoles={["teacher"]}><AppLayout><TeacherStudentReportPage /></AppLayout></ProtectedRoute>} />
             <Route path="/teacher/tests/new" element={<ProtectedRoute allowedRoles={["teacher"]}><AppLayout><TeacherTestCreatePage /></AppLayout></ProtectedRoute>} />
             <Route path="/teacher/tests/generate-baseline" element={<ProtectedRoute allowedRoles={["teacher"]}><AppLayout><TeacherGenerateBaselineTest /></AppLayout></ProtectedRoute>} />
+            <Route path="/teacher/baseline-suites/:suiteId" element={<ProtectedRoute allowedRoles={["teacher"]}><AppLayout><TeacherBaselineSuitePage /></AppLayout></ProtectedRoute>} />
             <Route path="/teacher/tests/:id" element={<ProtectedRoute allowedRoles={["teacher"]}><AppLayout><TeacherTestDetailPage /></AppLayout></ProtectedRoute>} />
             <Route path="/teacher/profile" element={<ProtectedRoute allowedRoles={["teacher"]}><AppLayout><TeacherProfilePage /></AppLayout></ProtectedRoute>} />
 
@@ -88,8 +97,10 @@ const App = () => (
             <Route path="/student/dashboard" element={<ProtectedRoute allowedRoles={["student"]}><AppLayout><StudentDashboard /></AppLayout></ProtectedRoute>} />
             <Route path="/student/tests" element={<ProtectedRoute allowedRoles={["student"]}><AppLayout><StudentTestsPage /></AppLayout></ProtectedRoute>} />
             <Route path="/student/tests/:id" element={<ProtectedRoute allowedRoles={["student"]}><AppLayout><StudentTestAttemptPage /></AppLayout></ProtectedRoute>} />
+            <Route path="/student/reports" element={<ProtectedRoute allowedRoles={["student"]}><AppLayout><StudentReportPage /></AppLayout></ProtectedRoute>} />
             <Route path="/student/report" element={<ProtectedRoute allowedRoles={["student"]}><AppLayout><StudentReportPage /></AppLayout></ProtectedRoute>} />
             <Route path="/student/profile" element={<ProtectedRoute allowedRoles={["student"]}><AppLayout><StudentProfilePage /></AppLayout></ProtectedRoute>} />
+            <Route path="/student/change-password" element={<ProtectedRoute allowedRoles={["student"]}><AppLayout><StudentChangePasswordPage /></AppLayout></ProtectedRoute>} />
 
             {/* Parent */}
             <Route path="/parent/dashboard" element={<ProtectedRoute allowedRoles={["parent"]}><AppLayout><ParentDashboard /></AppLayout></ProtectedRoute>} />
