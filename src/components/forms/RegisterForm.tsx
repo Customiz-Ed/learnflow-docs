@@ -89,8 +89,8 @@ export function RegisterForm({ role, title, subtitle, fields, onSubmit, loginLin
 
         <div className="rounded-xl bg-card p-8 shadow-surface-md">
           <div className="mb-6 flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-              <GraduationCap size={20} className="text-primary-foreground" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg">
+              <img src="/customized.png" alt="CustomizEd Logo" className="h-full w-full rounded-sm object-cover" />
             </div>
             <span className="font-display text-lg font-bold text-foreground">CustomizEd</span>
           </div>

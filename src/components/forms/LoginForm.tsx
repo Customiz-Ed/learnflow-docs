@@ -51,8 +51,8 @@ export function LoginForm({ role, title, subtitle, fields, onSubmit, registerLin
       {/* Left panel - branding */}
       <div className="hidden w-1/2 flex-col justify-between bg-primary p-12 lg:flex">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-foreground/20">
-            <GraduationCap size={24} className="text-primary-foreground" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl">
+            <img src="/customized.png" alt="CustomizEd Logo" className="h-full w-full rounded-sm object-cover" />
           </div>
           <span className="font-display text-xl font-bold text-primary-foreground">CustomizEd</span>
         </div>
@@ -77,8 +77,8 @@ export function LoginForm({ role, title, subtitle, fields, onSubmit, registerLin
         >
           {/* Mobile logo */}
           <div className="mb-8 flex items-center gap-3 lg:hidden">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-              <GraduationCap size={20} className="text-primary-foreground" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg">
+              <img src="/customized.png" alt="CustomizEd Logo" className="h-full w-full rounded-sm object-cover" />
             </div>
             <span className="font-display text-lg font-bold text-foreground">CustomizEd</span>
           </div>

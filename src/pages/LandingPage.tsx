@@ -14,8 +14,9 @@ export default function LandingPage() {
     <div className="flex min-h-screen flex-col bg-background">
       <header className="flex items-center justify-between px-6 py-4 lg:px-12">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
-            <GraduationCap size={24} className="text-primary-foreground" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl ">
+            {/* <GraduationCap size={24} className="text-primary-foreground" /> */}
+            <img src="/customized.png" alt="CustomizEd Logo" className="h-full w-full rounded-sm object-cover" />
           </div>
           <span className="font-display text-xl font-bold text-foreground">CustomizEd</span>
         </div>

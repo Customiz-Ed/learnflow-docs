@@ -82,8 +82,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       >
         {/* Logo */}
         <div className="flex h-16 items-center gap-3 px-6">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-            <GraduationCap size={20} className="text-primary-foreground" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg">
+            {/* <GraduationCap size={20} className="text-primary-foreground" /> */}
+            <img src="/customized.png" alt="CustomizEd Logo" className="h-full w-full rounded-sm object-cover" />
           </div>
           <span className="font-display text-lg font-bold text-foreground">CustomizEd</span>
           <button
