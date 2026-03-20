@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { testApi } from "@/api/testApi";
 import { classApi } from "@/api/classApi";
+import { normalizeApiError } from "@/features/tests/errors";
+import type { TeacherCreateTestPayload } from "@/features/tests/types";
 import { PageHeader } from "@/components/ui/page-helpers";
 import { motion } from "framer-motion";
 import { Plus, Trash2, ArrowLeft } from "lucide-react";
@@ -30,7 +32,7 @@ export default function TeacherTestCreatePage() {
 
   const createMutation = useMutation({
     mutationFn: () => {
-      const payload: any = {
+      const payload: TeacherCreateTestPayload = {
         name: form.name,
         description: form.description,
         classId: form.classId,
@@ -54,7 +56,15 @@ export default function TeacherTestCreatePage() {
       toast.success(res.data.message);
       navigate("/teacher/tests");
     },
-    onError: (err: any) => toast.error(err.response?.data?.message || "Failed"),
+    onError: (error) => {
+      const normalized = normalizeApiError(error);
+      console.error("Create test failed", {
+        code: normalized.code,
+        status: normalized.status,
+        details: normalized.details,
+      });
+      toast.error(normalized.message || "Failed");
+    },
   });
 
   const addQuestion = () => {
@@ -65,7 +75,7 @@ export default function TeacherTestCreatePage() {
     setQuestions(questions.filter((_, i) => i !== idx));
   };
 
-  const updateQuestion = (idx: number, field: string, value: any) => {
+  const updateQuestion = <K extends keyof QuestionForm>(idx: number, field: K, value: QuestionForm[K]) => {
     setQuestions(questions.map((q, i) => i === idx ? { ...q, [field]: value } : q));
   };
 
@@ -73,7 +83,7 @@ export default function TeacherTestCreatePage() {
     setQuestions(questions.map((q, i) => i === qIdx ? { ...q, options: [...q.options, { text: "", isCorrect: false }] } : q));
   };
 
-  const updateOption = (qIdx: number, oIdx: number, field: string, value: any) => {
+  const updateOption = (qIdx: number, oIdx: number, field: "text" | "isCorrect", value: string | boolean) => {
     setQuestions(questions.map((q, qi) =>
       qi === qIdx ? { ...q, options: q.options.map((o, oi) => oi === oIdx ? { ...o, [field]: value } : o) } : q
     ));
@@ -152,7 +162,7 @@ export default function TeacherTestCreatePage() {
               <input value={q.text} onChange={(e) => updateQuestion(qIdx, "text", e.target.value)} placeholder="Question text"
                 className="h-10 w-full rounded-lg bg-muted px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring" />
               <div className="flex gap-3">
-                <select value={q.type} onChange={(e) => updateQuestion(qIdx, "type", e.target.value)}
+                <select value={q.type} onChange={(e) => updateQuestion(qIdx, "type", e.target.value as "SINGLE" | "MULTI")}
                   className="h-10 rounded-lg bg-muted px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring">
                   <option value="SINGLE">Single Choice</option>
                   <option value="MULTI">Multiple Choice</option>

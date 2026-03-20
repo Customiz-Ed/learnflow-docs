@@ -148,9 +148,10 @@ export default function TeacherGenerateBaselineTest() {
   }, [jobs]);
 
   useEffect(() => {
+    const controllers = pollControllersRef.current;
     return () => {
-      pollControllersRef.current.forEach((controller) => controller.cancel());
-      pollControllersRef.current.clear();
+      controllers.forEach((controller) => controller.cancel());
+      controllers.clear();
     };
   }, []);
 

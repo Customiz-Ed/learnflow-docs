@@ -10,9 +10,24 @@ import { School, Plus, MapPin, Mail, Trash2, Download, Upload, Copy, FileDown, A
 import { toast } from "sonner";
 import type { BulkImportResult } from "@/types/api.types";
 
+type SchoolFormState = {
+  name: string;
+  address: string;
+  city: string;
+  state: string;
+  contactEmail: string;
+  contactPhone: string;
+};
+
+type SchoolFormField = {
+  key: keyof SchoolFormState;
+  label: string;
+  placeholder: string;
+};
+
 export default function SchoolsPage() {
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ name: "", address: "", city: "", state: "", contactEmail: "", contactPhone: "" });
+  const [form, setForm] = useState<SchoolFormState>({ name: "", address: "", city: "", state: "", contactEmail: "", contactPhone: "" });
   const [selectedSchoolId, setSelectedSchoolId] = useState("");
   const [selectedClassId, setSelectedClassId] = useState("");
   const [selectedDivisionId, setSelectedDivisionId] = useState("");
@@ -93,8 +108,23 @@ export default function SchoolsPage() {
       setShowForm(false);
       setForm({ name: "", address: "", city: "", state: "", contactEmail: "", contactPhone: "" });
     },
-    onError: (err: any) => toast.error(err.response?.data?.message || "Failed to create school"),
+    onError: (err: unknown) => {
+      if (isAxiosError(err)) {
+        toast.error(err.response?.data?.message || "Failed to create school");
+      } else {
+        toast.error("Failed to create school");
+      }
+    },
   });
+
+  const schoolFormFields: SchoolFormField[] = [
+    { key: "name", label: "School Name *", placeholder: "Springfield Elementary" },
+    { key: "address", label: "Address", placeholder: "123 Main St" },
+    { key: "city", label: "City", placeholder: "Springfield" },
+    { key: "state", label: "State", placeholder: "IL" },
+    { key: "contactEmail", label: "Contact Email", placeholder: "info@school.edu" },
+    { key: "contactPhone", label: "Contact Phone", placeholder: "+1 234 567 8900" },
+  ];
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => schoolApi.remove(id),
@@ -210,19 +240,12 @@ export default function SchoolsPage() {
         >
           <h3 className="mb-4 text-heading-3 font-semibold text-foreground">New School</h3>
           <div className="grid gap-4 sm:grid-cols-2">
-            {[
-              { key: "name", label: "School Name *", placeholder: "Springfield Elementary" },
-              { key: "address", label: "Address", placeholder: "123 Main St" },
-              { key: "city", label: "City", placeholder: "Springfield" },
-              { key: "state", label: "State", placeholder: "IL" },
-              { key: "contactEmail", label: "Contact Email", placeholder: "info@school.edu" },
-              { key: "contactPhone", label: "Contact Phone", placeholder: "+1 234 567 8900" },
-            ].map((f) => (
+            {schoolFormFields.map((f) => (
               <div key={f.key}>
                 <label className="mb-1.5 block text-sm font-medium text-foreground">{f.label}</label>
                 <input
                   placeholder={f.placeholder}
-                  value={(form as any)[f.key]}
+                  value={form[f.key]}
                   onChange={(e) => setForm((prev) => ({ ...prev, [f.key]: e.target.value }))}
                   className="h-10 w-full rounded-lg bg-muted px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 />

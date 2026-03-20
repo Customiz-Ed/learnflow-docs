@@ -26,6 +26,7 @@ import TeacherEnrollmentsPage from "./pages/teacher/TeacherEnrollmentsPage";
 import TeacherTestsPage from "./pages/teacher/TeacherTestsPage";
 import TeacherTestDetailPage from "./pages/teacher/TeacherTestDetailPage";
 import TeacherTestCreatePage from "./pages/teacher/TeacherTestCreatePage";
+import TeacherTestEditPage from "./pages/teacher/TeacherTestEditPage";
 import TeacherGenerateBaselineTest from "./pages/teacher/TeacherGenerateBaselineTest";
 import TeacherBaselineSuitePage from "./pages/teacher/TeacherBaselineSuitePage";
 import TeacherProfilePage from "./pages/teacher/TeacherProfilePage";
@@ -88,6 +89,7 @@ const App = () => (
             <Route path="/teacher/reports" element={<ProtectedRoute allowedRoles={["teacher"]}><AppLayout><TeacherReportsPage /></AppLayout></ProtectedRoute>} />
             <Route path="/teacher/reports/:studentId" element={<ProtectedRoute allowedRoles={["teacher"]}><AppLayout><TeacherStudentReportPage /></AppLayout></ProtectedRoute>} />
             <Route path="/teacher/tests/new" element={<ProtectedRoute allowedRoles={["teacher"]}><AppLayout><TeacherTestCreatePage /></AppLayout></ProtectedRoute>} />
+            <Route path="/teacher/tests/:id/edit" element={<ProtectedRoute allowedRoles={["teacher"]}><AppLayout><TeacherTestEditPage /></AppLayout></ProtectedRoute>} />
             <Route path="/teacher/tests/generate-baseline" element={<ProtectedRoute allowedRoles={["teacher"]}><AppLayout><TeacherGenerateBaselineTest /></AppLayout></ProtectedRoute>} />
             <Route path="/teacher/baseline-suites/:suiteId" element={<ProtectedRoute allowedRoles={["teacher"]}><AppLayout><TeacherBaselineSuitePage /></AppLayout></ProtectedRoute>} />
             <Route path="/teacher/tests/:id" element={<ProtectedRoute allowedRoles={["teacher"]}><AppLayout><TeacherTestDetailPage /></AppLayout></ProtectedRoute>} />

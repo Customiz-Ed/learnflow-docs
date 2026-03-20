@@ -4,6 +4,7 @@ import { PageHeader, EmptyState } from "@/components/ui/page-helpers";
 import { motion } from "framer-motion";
 import { UserCheck, Check, X } from "lucide-react";
 import { toast } from "sonner";
+import { isAxiosError } from "axios";
 
 export default function TeacherEnrollmentsPage() {
   const queryClient = useQueryClient();
@@ -21,7 +22,14 @@ export default function TeacherEnrollmentsPage() {
       queryClient.invalidateQueries({ queryKey: ["pending-enrollments"] });
       queryClient.invalidateQueries({ queryKey: ["teacher-students"] });
     },
-    onError: (err: any) => {toast.error(err.response?.data?.message || "Failed"), console.error(err)},
+    onError: (err: unknown) => {
+      if (isAxiosError(err)) {
+        toast.error(err.response?.data?.message || "Failed");
+      } else {
+        toast.error("Failed");
+      }
+      console.error(err);
+    },
   });
 
   return (

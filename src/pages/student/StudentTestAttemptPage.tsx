@@ -1,18 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { isAxiosError } from "axios";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight, Clock, Send } from "lucide-react";
 import { toast } from "sonner";
-import { testApi } from "@/api/testApi";
 import { baselineReportApi } from "@/api/baselineReportApi";
 import { startPolling } from "@/lib/polling";
+import { testsApi } from "@/features/tests/api";
+import { getUiErrorMessage, normalizeApiError } from "@/features/tests/errors";
+import { TestAvailabilityState } from "@/features/tests/components/TestAvailabilityState";
 
 export default function StudentTestAttemptPage() {
   const { id: testId } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const [attemptId, setAttemptId] = useState<string | null>(searchParams.get("attemptId"));
   const [currentQ, setCurrentQ] = useState(0);
@@ -21,63 +23,76 @@ export default function StudentTestAttemptPage() {
   const [submittedScore, setSubmittedScore] = useState<number | null>(null);
   const [reportPollingState, setReportPollingState] = useState<"idle" | "loading" | "success" | "error">("idle");
 
-  const { data: test } = useQuery({
-    queryKey: ["test", testId],
-    queryFn: () => testApi.getById(testId!).then((r) => r.data.data),
+  const {
+    data: test,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ["student-test", testId],
+    queryFn: () => testsApi.getStudentTestById(testId as string),
     enabled: !!testId,
+    retry: 1,
   });
 
+  const isAvailabilityBlocked = isError && normalizeApiError(error).status === 403;
+
   const startMutation = useMutation({
-    mutationFn: () => testApi.startAttempt({ testId: testId! }),
-    onSuccess: (res) => {
-      setAttemptId(res.data.data.id);
-      if (test?.duration) setTimeLeft(test.duration * 60);
-    },
-    onError: (err) => {
-      if (isAxiosError(err)) {
-        const status = err.response?.status;
-        if (status === 409) {
-          toast.error("Attempt already exists. Go back and reopen your test.");
-          return;
-        }
-        if (status === 429 || (status !== undefined && status >= 500)) {
-          toast.error("Server is busy. Please retry in a moment.");
-          return;
-        }
+    mutationFn: () => testsApi.startStudentAttempt(testId as string),
+    onSuccess: (attempt) => {
+      setAttemptId(attempt.id);
+      if (test?.duration) {
+        setTimeLeft(test.duration * 60);
       }
-      toast.error("Failed to start test.");
+    },
+    onError: (mutationError) => {
+      const normalized = normalizeApiError(mutationError);
+      if (normalized.status === 403) {
+        queryClient.invalidateQueries({ queryKey: ["baseline-suite"] });
+      }
+      console.error("Failed to start attempt", {
+        code: normalized.code,
+        status: normalized.status,
+        details: normalized.details,
+      });
+      toast.error(getUiErrorMessage(mutationError, "Failed to start test."));
     },
   });
 
   const submitMutation = useMutation({
     mutationFn: () => {
-      const answerPayload = Object.entries(answers).flatMap(([qId, optIds]) =>
-        optIds.map((optId) => ({ questionId: qId, optionId: optId }))
+      const answerPayload = Object.entries(answers).flatMap(([questionId, optionIds]) =>
+        optionIds.map((optionId) => ({ questionId, optionId })),
       );
-      return testApi.submitAttempt(attemptId!, { answers: answerPayload });
+      return testsApi.submitStudentAttempt(attemptId as string, { answers: answerPayload });
     },
-    onSuccess: (res) => {
-      setSubmittedScore(res.data.data.totalScore);
+    onSuccess: (result) => {
+      setSubmittedScore(result.totalScore);
       toast.success("Test submitted successfully.");
       setReportPollingState("loading");
     },
-    onError: (err) => {
-      if (isAxiosError(err)) {
-        const status = err.response?.status;
-        if (status === 429 || (status !== undefined && status >= 500)) {
-          toast.error("Submission delayed. Retry now.");
-          return;
-        }
-      }
-      toast.error("Failed to submit test.");
+    onError: (mutationError) => {
+      const normalized = normalizeApiError(mutationError);
+      console.error("Failed to submit attempt", {
+        code: normalized.code,
+        status: normalized.status,
+        details: normalized.details,
+      });
+      toast.error(getUiErrorMessage(mutationError, "Failed to submit test."));
     },
   });
 
   useEffect(() => {
+    if (isError) {
+      toast.error(getUiErrorMessage(error, "Unable to load this test."));
+    }
+  }, [error, isError]);
+
+  useEffect(() => {
     if (timeLeft === null || timeLeft <= 0 || submitMutation.isSuccess) return;
-    const interval = setInterval(() => setTimeLeft((t) => (t !== null ? t - 1 : null)), 1000);
+    const interval = setInterval(() => setTimeLeft((previous) => (previous !== null ? previous - 1 : null)), 1000);
     return () => clearInterval(interval);
-  }, [timeLeft, submitMutation.isSuccess]);
+  }, [submitMutation.isSuccess, timeLeft]);
 
   useEffect(() => {
     if (timeLeft === 0 && attemptId && !submitMutation.isPending && !submitMutation.isSuccess) {
@@ -99,13 +114,13 @@ export default function StudentTestAttemptPage() {
         reports.some(
           (report) =>
             report.baselineSuiteId === test.baselineSuiteId &&
-            (report.subject === test.baselineSubject || report.reportScope === "CUMULATIVE")
+            (report.subject === test.baselineSubject || report.reportScope === "CUMULATIVE"),
         ),
       onTick: (reports) => {
         const hasReport = reports.some(
           (report) =>
             report.baselineSuiteId === test.baselineSuiteId &&
-            (report.subject === test.baselineSubject || report.reportScope === "CUMULATIVE")
+            (report.subject === test.baselineSubject || report.reportScope === "CUMULATIVE"),
         );
 
         if (hasReport) {
@@ -126,17 +141,23 @@ export default function StudentTestAttemptPage() {
   const currentQuestion = questions[currentQ];
 
   const toggleAnswer = (questionId: string, optionId: string, type: "SINGLE" | "MULTI") => {
-    setAnswers((prev) => {
-      if (type === "SINGLE") return { ...prev, [questionId]: [optionId] };
-      const current = prev[questionId] || [];
+    setAnswers((previous) => {
+      if (type === "SINGLE") {
+        return { ...previous, [questionId]: [optionId] };
+      }
+
+      const current = previous[questionId] || [];
       return {
-        ...prev,
-        [questionId]: current.includes(optionId) ? current.filter((id) => id !== optionId) : [...current, optionId],
+        ...previous,
+        [questionId]: current.includes(optionId)
+          ? current.filter((id) => id !== optionId)
+          : [...current, optionId],
       };
     });
   };
 
-  const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, "0")}`;
+  const formatTime = (seconds: number) =>
+    `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, "0")}`;
 
   const summaryText = useMemo(() => {
     if (reportPollingState === "loading") return "Report generation in progress...";
@@ -144,7 +165,17 @@ export default function StudentTestAttemptPage() {
     return "";
   }, [reportPollingState]);
 
-  if (!test) return <div className="h-40 animate-pulse rounded-xl bg-muted" />;
+  if (isLoading) {
+    return <div className="h-40 animate-pulse rounded-xl bg-muted" />;
+  }
+
+  if (isAvailabilityBlocked) {
+    return <TestAvailabilityState onBack={() => navigate("/student/tests")} />;
+  }
+
+  if (!test) {
+    return <p className="text-muted-foreground">This test could not be loaded.</p>;
+  }
 
   if (submittedScore !== null) {
     return (
@@ -152,7 +183,7 @@ export default function StudentTestAttemptPage() {
         <h1 className="text-heading-2 font-bold text-foreground">Submission Complete</h1>
         <p className="mt-2 text-muted-foreground">Your immediate score:</p>
         <p className="mt-3 text-4xl font-bold text-primary">{submittedScore}</p>
-        {summaryText && <p className="mt-4 text-sm text-muted-foreground">{summaryText}</p>}
+        {summaryText ? <p className="mt-4 text-sm text-muted-foreground">{summaryText}</p> : null}
         <button
           onClick={() => navigate("/student/report")}
           className="mt-6 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground"
@@ -174,9 +205,13 @@ export default function StudentTestAttemptPage() {
           <h1 className="text-heading-2 font-bold text-foreground">{test.name}</h1>
           <p className="mt-2 text-muted-foreground">{test.description}</p>
           <div className="mt-4 flex justify-center gap-6 text-sm text-muted-foreground">
-            {test.duration && <span className="flex items-center gap-1"><Clock size={16} /> {test.duration} min</span>}
+            {test.duration ? (
+              <span className="flex items-center gap-1">
+                <Clock size={16} /> {test.duration} min
+              </span>
+            ) : null}
             <span>{questions.length} questions</span>
-            {test.totalMarks && <span>{test.totalMarks} marks</span>}
+            {test.totalMarks ? <span>{test.totalMarks} marks</span> : null}
           </div>
           <motion.button
             whileHover={{ scale: 1.02 }}
@@ -196,32 +231,36 @@ export default function StudentTestAttemptPage() {
     <div className="mx-auto max-w-4xl">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-heading-3 font-bold text-foreground">{test.name}</h1>
-        {timeLeft !== null && (
-          <div className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-mono font-semibold tabular-nums ${
-            timeLeft < 60 ? "bg-destructive/10 text-destructive" : "bg-muted text-foreground"
-          }`}>
+        {timeLeft !== null ? (
+          <div
+            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-mono font-semibold tabular-nums ${
+              timeLeft < 60 ? "bg-destructive/10 text-destructive" : "bg-muted text-foreground"
+            }`}
+          >
             <Clock size={16} /> {formatTime(timeLeft)}
           </div>
-        )}
+        ) : null}
       </div>
 
       <div className="mb-6 flex flex-wrap gap-2">
-        {questions.map((q, i) => (
+        {questions.map((question, index) => (
           <button
-            key={q.id}
-            onClick={() => setCurrentQ(i)}
+            key={question.id}
+            onClick={() => setCurrentQ(index)}
             className={`h-9 w-9 rounded-lg text-sm font-medium transition-all ${
-              i === currentQ ? "bg-primary text-primary-foreground" :
-              answers[q.id]?.length ? "bg-primary/20 text-primary" :
-              "bg-muted text-muted-foreground hover:bg-muted/80"
+              index === currentQ
+                ? "bg-primary text-primary-foreground"
+                : answers[question.id]?.length
+                  ? "bg-primary/20 text-primary"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
             }`}
           >
-            {i + 1}
+            {index + 1}
           </button>
         ))}
       </div>
 
-      {currentQuestion && (
+      {currentQuestion ? (
         <AnimatePresence mode="wait">
           <motion.div
             key={currentQuestion.id}
@@ -232,35 +271,43 @@ export default function StudentTestAttemptPage() {
             className="rounded-xl bg-card p-8 shadow-surface"
           >
             <div className="mb-1 flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Question {currentQ + 1} of {questions.length}</span>
-              <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">{currentQuestion.type}</span>
+              <span className="text-sm text-muted-foreground">
+                Question {currentQ + 1} of {questions.length}
+              </span>
+              <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                {currentQuestion.type}
+              </span>
             </div>
             <p className="text-lg font-medium text-foreground">{currentQuestion.text}</p>
 
             <div className="mt-6 space-y-3">
-              {currentQuestion.options.map((opt) => {
-                const selected = answers[currentQuestion.id]?.includes(opt.id);
+              {currentQuestion.options.map((option) => {
+                const selected = answers[currentQuestion.id]?.includes(option.id);
                 return (
                   <motion.button
-                    key={opt.id}
+                    key={option.id}
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.99 }}
-                    onClick={() => toggleAnswer(currentQuestion.id, opt.id, currentQuestion.type)}
+                    onClick={() => toggleAnswer(currentQuestion.id, option.id, currentQuestion.type)}
                     className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm transition-all ${
-                      selected ? "bg-primary/10 text-primary ring-2 ring-primary" : "bg-muted text-foreground hover:bg-muted/80"
+                      selected
+                        ? "bg-primary/10 text-primary ring-2 ring-primary"
+                        : "bg-muted text-foreground hover:bg-muted/80"
                     }`}
                   >
-                    <div className={`h-5 w-5 shrink-0 rounded-full border-2 transition-colors ${
-                      selected ? "border-primary bg-primary" : "border-muted-foreground"
-                    }`} />
-                    {opt.text}
+                    <div
+                      className={`h-5 w-5 shrink-0 rounded-full border-2 transition-colors ${
+                        selected ? "border-primary bg-primary" : "border-muted-foreground"
+                      }`}
+                    />
+                    {option.text}
                   </motion.button>
                 );
               })}
             </div>
           </motion.div>
         </AnimatePresence>
-      )}
+      ) : null}
 
       <div className="mt-6 flex items-center justify-between">
         <button

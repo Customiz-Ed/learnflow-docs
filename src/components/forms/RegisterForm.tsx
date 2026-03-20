@@ -4,6 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { motion } from "framer-motion";
 import { GraduationCap, Eye, EyeOff, ArrowRight, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { isAxiosError } from "axios";
 import type { Role } from "@/types/api.types";
 
 interface RegisterField {
@@ -67,8 +68,12 @@ export function RegisterForm({ role, title, subtitle, fields, onSubmit, loginLin
       login(result.token, role, result.id, result.name);
       toast.success("Account created successfully!");
       navigate(`/${role}/dashboard`);
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Registration failed");
+    } catch (err: unknown) {
+      if (isAxiosError(err)) {
+        toast.error(err.response?.data?.message || "Registration failed");
+      } else {
+        toast.error("Registration failed");
+      }
     } finally {
       setLoading(false);
     }

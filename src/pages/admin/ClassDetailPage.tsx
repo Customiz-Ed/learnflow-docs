@@ -6,6 +6,7 @@ import { PageHeader, EmptyState } from "@/components/ui/page-helpers";
 import { motion } from "framer-motion";
 import { BookOpen, Plus, Layers, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { isAxiosError } from "axios";
 
 export default function ClassDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -33,7 +34,13 @@ export default function ClassDetailPage() {
       setShowDivForm(false);
       setDivForm({ name: "", teacherId: "" });
     },
-    onError: (err: any) => toast.error(err.response?.data?.message || "Failed"),
+    onError: (err: unknown) => {
+      if (isAxiosError(err)) {
+        toast.error(err.response?.data?.message || "Failed");
+      } else {
+        toast.error("Failed");
+      }
+    },
   });
 
   return (

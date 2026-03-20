@@ -4,6 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { motion } from "framer-motion";
 import { GraduationCap, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
+import { isAxiosError } from "axios";
 import type { Role } from "@/types/api.types";
 
 interface AuthField {
@@ -39,8 +40,12 @@ export function LoginForm({ role, title, subtitle, fields, onSubmit, registerLin
       login(result.token, role, result.id, result.name);
       toast.success("Welcome back!");
       navigate(result.redirectTo || `/${role}/dashboard`);
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Login failed");
+    } catch (err: unknown) {
+      if (isAxiosError(err)) {
+        toast.error(err.response?.data?.message || "Login failed");
+      } else {
+        toast.error("Login failed");
+      }
     } finally {
       setLoading(false);
     }

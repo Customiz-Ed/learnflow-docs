@@ -1,9 +1,11 @@
 import { useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { testApi } from "@/api/testApi";
+import { testsApi } from "@/features/tests/api";
+import { getUiErrorMessage, normalizeApiError } from "@/features/tests/errors";
 import { PageHeader } from "@/components/ui/page-helpers";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import type { TestStatus } from "@/features/tests/types";
 
 export default function TeacherTestDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -11,17 +13,26 @@ export default function TeacherTestDetailPage() {
 
   const { data: test, isLoading } = useQuery({
     queryKey: ["test", id],
-    queryFn: () => testApi.getById(id!).then((r) => r.data.data),
+    queryFn: () => testsApi.getTeacherTestById(id as string),
     enabled: !!id,
   });
 
   const updateMutation = useMutation({
-    mutationFn: (data: { status?: string }) => testApi.update(id!, data as any),
-    onSuccess: (res) => {
-      toast.success(res.data.message);
+    mutationFn: (data: { status?: TestStatus }) => testsApi.updateTeacherTest(id as string, data),
+    onSuccess: () => {
+      toast.success("Test updated.");
       queryClient.invalidateQueries({ queryKey: ["test", id] });
+      queryClient.invalidateQueries({ queryKey: ["teacher-tests"] });
     },
-    onError: (err: any) => toast.error(err.response?.data?.message || "Failed"),
+    onError: (error) => {
+      const normalized = normalizeApiError(error);
+      console.error("Teacher detail update failed", {
+        code: normalized.code,
+        status: normalized.status,
+        details: normalized.details,
+      });
+      toast.error(getUiErrorMessage(error, "Failed to update test."));
+    },
   });
 
   if (isLoading) return <div className="h-40 animate-pulse rounded-xl bg-muted" />;

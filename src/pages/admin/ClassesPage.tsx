@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { BookOpen, Plus, Layers, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
+import { isAxiosError } from "axios";
 
 export default function ClassesPage() {
   const [showForm, setShowForm] = useState(false);
@@ -44,7 +45,13 @@ export default function ClassesPage() {
       setShowForm(false);
       setForm({ name: "", schoolId: "", teacherId: "" });
     },
-    onError: (err: any) => toast.error(err.response?.data?.message || "Failed"),
+    onError: (err: unknown) => {
+      if (isAxiosError(err)) {
+        toast.error(err.response?.data?.message || "Failed");
+      } else {
+        toast.error("Failed");
+      }
+    },
   });
 
   const deleteMutation = useMutation({

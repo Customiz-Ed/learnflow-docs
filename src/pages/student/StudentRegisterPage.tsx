@@ -6,7 +6,23 @@ import { studentApi } from "@/api/studentApi";
 import { motion, AnimatePresence } from "framer-motion";
 import { GraduationCap, ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { toast } from "sonner";
+import { isAxiosError } from "axios";
 import type { CatalogSchool, CatalogClass, CatalogDivision } from "@/types/api.types";
+
+type StudentRegisterFormState = {
+  username: string;
+  name: string;
+  password: string;
+  age: string;
+  grade: string;
+};
+
+type StudentRegisterField = {
+  name: keyof StudentRegisterFormState;
+  label: string;
+  type: string;
+  placeholder: string;
+};
 
 export default function StudentRegisterPage() {
   const [step, setStep] = useState(1);
@@ -16,7 +32,7 @@ export default function StudentRegisterPage() {
   const [selectedSchool, setSelectedSchool] = useState<string>("");
   const [selectedClass, setSelectedClass] = useState<string>("");
   const [selectedDivision, setSelectedDivision] = useState<string>("");
-  const [formData, setFormData] = useState({ username: "", name: "", password: "", age: "", grade: "" });
+  const [formData, setFormData] = useState<StudentRegisterFormState>({ username: "", name: "", password: "", age: "", grade: "" });
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -53,12 +69,24 @@ export default function StudentRegisterPage() {
       login(token, "student", student.id, student.name);
       toast.success("Account created! Your enrollment request is pending.");
       navigate("/student/dashboard");
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Registration failed");
+    } catch (err: unknown) {
+      if (isAxiosError(err)) {
+        toast.error(err.response?.data?.message || "Registration failed");
+      } else {
+        toast.error("Registration failed");
+      }
     } finally {
       setLoading(false);
     }
   };
+
+  const detailFields: StudentRegisterField[] = [
+    { name: "name", label: "Full Name", type: "text", placeholder: "Alex Johnson" },
+    { name: "username", label: "Username", type: "text", placeholder: "alex_j" },
+    { name: "password", label: "Password", type: "password", placeholder: "••••••••" },
+    { name: "grade", label: "Grade", type: "number", placeholder: "5" },
+    { name: "age", label: "Age (optional)", type: "number", placeholder: "10" },
+  ];
 
   const steps = ["School", "Class", "Division", "Details"];
 
@@ -166,20 +194,14 @@ export default function StudentRegisterPage() {
             {step === 4 && (
               <StepPanel key="s4" title="Your details">
                 <div className="space-y-4">
-                  {[
-                    { name: "name", label: "Full Name", type: "text", placeholder: "Alex Johnson" },
-                    { name: "username", label: "Username", type: "text", placeholder: "alex_j" },
-                    { name: "password", label: "Password", type: "password", placeholder: "••••••••" },
-                    { name: "grade", label: "Grade", type: "number", placeholder: "5" },
-                    { name: "age", label: "Age (optional)", type: "number", placeholder: "10" },
-                  ].map((f) => (
+                  {detailFields.map((f) => (
                     <div key={f.name}>
                       <label className="mb-1.5 block text-sm font-medium text-foreground">{f.label}</label>
                       <input
                         type={f.type}
                         placeholder={f.placeholder}
                         required={f.name !== "age"}
-                        value={(formData as any)[f.name]}
+                        value={formData[f.name]}
                         onChange={(e) => setFormData((prev) => ({ ...prev, [f.name]: e.target.value }))}
                         className="h-11 w-full rounded-lg bg-muted px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
                       />
