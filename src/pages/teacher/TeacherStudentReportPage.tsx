@@ -19,7 +19,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MarkdownRenderer } from "@/components/ui/MarkdownRenderer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmptyState } from "@/components/ui/page-helpers";
+import { LessonPlanPanel } from "@/components/lesson-plans/LessonPlanPanel";
 import { startPolling, type PollingController } from "@/lib/polling";
 import { reportSuiteLabels } from "@/lib/report-center";
 import type {
@@ -68,6 +70,7 @@ export default function TeacherStudentReportPage() {
   }, [data]);
 
   const [selectedSuiteId, setSelectedSuiteId] = useState("");
+  const [activeTab, setActiveTab] = useState<"reports" | "lesson-plans">("reports");
   useEffect(() => {
     if (!data?.suites?.length) return;
     const defaultSuite = data.selectedSuiteId ?? data.suites[0].id;
@@ -358,9 +361,16 @@ export default function TeacherStudentReportPage() {
         </CardContent>
       </Card>
 
-      {selectedSuite && activeReport && (
-        <>
-          <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-4">
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "reports" | "lesson-plans")}>
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="reports">Reports</TabsTrigger>
+          <TabsTrigger value="lesson-plans">Lesson Plans</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="reports" className="space-y-6 mt-6">
+          {selectedSuite && activeReport && (
+            <>
+              <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-4">
             {selectedSuite.subjectReports.map((report) => (
               <ReportTile
                 key={report.id}
@@ -460,8 +470,18 @@ export default function TeacherStudentReportPage() {
               </div>
             </CardContent>
           </Card>
-        </>
-      )}
+            </>
+          )}
+        </TabsContent>
+
+        <TabsContent value="lesson-plans" className="mt-6">
+          {selectedSuite ? (
+            <LessonPlanPanel studentId={studentId} suiteId={selectedSuite.id} isActive={activeTab === "lesson-plans"} />
+          ) : (
+            <EmptyState icon="FileText" title="No Suite Selected" description="Please select a suite to view lesson plans" />
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

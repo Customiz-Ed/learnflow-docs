@@ -39,7 +39,7 @@ export default function TeacherGenerateBaselineTest() {
     classId: "",
     divisionId: "",
     testName: "",
-    numberOfQuestions: "10",
+    numberOfQuestions: "20",
     difficulty: "Easy",
   });
 
