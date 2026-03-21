@@ -542,3 +542,68 @@ export interface CatalogDivision {
   id: string;
   name: string;
 }
+
+// Lesson Plan
+export type LessonPlanSubject = "ENGLISH" | "MATHS";
+export type LessonPlanJobStatus = "QUEUED" | "PROCESSING" | "COMPLETED" | "FAILED";
+export type LessonPlanUiStatus = "NOT_STARTED" | "QUEUED" | "PROCESSING" | "READY" | "FAILED";
+
+export interface TriggerSubjectLessonPlanRequest {
+  studentId: string;
+  suiteId: string;
+  subject: LessonPlanSubject;
+}
+
+export interface TriggerSubjectLessonPlanData {
+  job: {
+    id: string;
+    studentId: string;
+    baselineSuiteId: string;
+    subject: LessonPlanSubject;
+    status: LessonPlanJobStatus;
+  };
+  callbackUrl: string;
+}
+
+export interface LessonPlanStructuredSummary {
+  subject: LessonPlanSubject;
+  score: number | null;
+  percentage: number | null;
+  strongTopics: string[];
+  weakTopics: string[];
+  misconceptions: Array<{
+    topic?: string;
+    candidates?: string[];
+  }>;
+  objectives: string[];
+  recommendedActivities: string[];
+  parentActions: string[];
+  teacherNextSteps: string[];
+  riskLevel: "LOW" | "MEDIUM" | "HIGH" | string;
+  confidenceNotes: string | null;
+  [key: string]: unknown;
+}
+
+export interface LessonPlanSubjectSummary {
+  subject: LessonPlanSubject;
+  status: LessonPlanUiStatus;
+  planId: string | null;
+  generatedAt: string | null;
+  markdownContent?: string;
+  structuredSummaryJson: LessonPlanStructuredSummary | null;
+  jobId: string | null;
+  jobStatus: LessonPlanJobStatus | null;
+  jobError: string | null;
+  canTrigger: boolean;
+  triggerLabel: string;
+}
+
+export interface TeacherStudentLessonPlansData {
+  student: {
+    id: string;
+    name: string;
+    className: string;
+    divisionName: string;
+  };
+  subjectSummaries: LessonPlanSubjectSummary[];
+}
