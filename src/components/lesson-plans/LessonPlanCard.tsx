@@ -39,8 +39,8 @@ interface LessonPlanSubjectCardProps {
   isLoading?: boolean;
   isTriggerPending?: boolean;
   onTrigger?: () => void;
-  isDetailView?: boolean;
-  onShowDetail?: () => void;
+  isActive?: boolean;
+  onOpen?: () => void;
 }
 
 /**
@@ -52,8 +52,8 @@ export function LessonPlanSubjectCard({
   isLoading,
   isTriggerPending,
   onTrigger,
-  isDetailView,
-  onShowDetail,
+  isActive,
+  onOpen,
 }: LessonPlanSubjectCardProps) {
   const isInFlight = subject.status === "QUEUED" || subject.status === "PROCESSING";
   const isFailed = subject.status === "FAILED";
@@ -61,9 +61,16 @@ export function LessonPlanSubjectCard({
 
   return (
     <Card
-      className={`transition-all ${
-        isDetailView ? "ring-2 ring-primary" : ""
-      }`}
+      role="button"
+      tabIndex={0}
+      onClick={onOpen}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onOpen?.();
+        }
+      }}
+      className={`cursor-pointer transition-all ${isActive ? "ring-2 ring-primary" : ""}`}
     >
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
@@ -78,7 +85,9 @@ export function LessonPlanSubjectCard({
                   ? `Generated ${format(new Date(subject.generatedAt), "MMM d, yyyy")}`
                   : subject.status === "NOT_STARTED"
                     ? "Ready to generate"
-                    : ""}
+                    : isInFlight
+                      ? "Generating in progress"
+                      : ""}
               </CardDescription>
             </div>
           </div>
@@ -155,13 +164,6 @@ export function LessonPlanSubjectCard({
           </div>
         )}
 
-        {/* Show full markdown content if in detail view */}
-        {isDetailView && isReady && subject.markdownContent && (
-          <div className="max-h-[60vh] overflow-y-auto rounded-lg bg-muted/30 p-4">
-            <MarkdownRenderer content={subject.markdownContent} />
-          </div>
-        )}
-
         {/* Action buttons */}
         <div className="flex gap-2 pt-2">
           {subject.canTrigger && !isReady && (
@@ -176,26 +178,18 @@ export function LessonPlanSubjectCard({
               {subject.triggerLabel}
             </Button>
           )}
-          {isReady && !isDetailView && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={onShowDetail}
-              className="gap-2"
-            >
-              <FileText size={14} />
-              View Details
-            </Button>
-          )}
-          {isDetailView && (
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={onShowDetail}
-            >
-              Close Details
-            </Button>
-          )}
+          <Button
+            size="sm"
+            variant={isActive ? "default" : "outline"}
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpen?.();
+            }}
+            className="gap-2"
+          >
+            <FileText size={14} />
+            {isActive ? "Opened" : "Open"}
+          </Button>
         </div>
       </CardContent>
     </Card>
@@ -237,6 +231,10 @@ export function LessonPlanStudentView({
     );
   }
 
+  const selectedSubjectSummary =
+    data.subjectSummaries.find((subject) => subject.subject === expandedSubject) ??
+    data.subjectSummaries[0];
+
   return (
     <div className="space-y-4">
       {/* Student Header */}
@@ -266,15 +264,55 @@ export function LessonPlanStudentView({
             isLoading={isLoading}
             isTriggerPending={triggeringSubject === subject.subject}
             onTrigger={() => onTrigger?.(subject.subject)}
-            isDetailView={expandedSubject === subject.subject}
-            onShowDetail={() =>
-              onExpandSubject?.(
-                expandedSubject === subject.subject ? null : subject.subject,
-              )
-            }
+            isActive={selectedSubjectSummary?.subject === subject.subject}
+            onOpen={() => onExpandSubject?.(subject.subject)}
           />
         ))}
       </div>
+
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <CardTitle className="text-xl">
+                {selectedSubjectSummary.subject} Lesson Plan
+              </CardTitle>
+              <CardDescription>
+                {selectedSubjectSummary.status === "READY" && selectedSubjectSummary.generatedAt
+                  ? `Generated ${format(new Date(selectedSubjectSummary.generatedAt), "MMM d, yyyy")}`
+                  : selectedSubjectSummary.status === "FAILED"
+                    ? "Generation failed. Review the error and retry."
+                    : selectedSubjectSummary.status === "NOT_STARTED"
+                      ? "Generate this lesson plan to view the full markdown."
+                      : "Lesson plan generation is in progress."}
+              </CardDescription>
+            </div>
+            <Badge variant="outline" className={statusStyles[selectedSubjectSummary.status]}>
+              <span className="flex items-center gap-1">
+                {statusIcons[selectedSubjectSummary.status]}
+                {statusLabels[selectedSubjectSummary.status]}
+              </span>
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {selectedSubjectSummary.status === "READY" && selectedSubjectSummary.markdownContent ? (
+            <div className="min-h-[28rem] rounded-xl border border-border bg-background p-5">
+              <MarkdownRenderer content={selectedSubjectSummary.markdownContent} />
+            </div>
+          ) : (
+            <div className="min-h-[20rem] rounded-xl border border-dashed border-border bg-muted/20 p-6 text-sm text-muted-foreground">
+              {selectedSubjectSummary.jobError
+                ? selectedSubjectSummary.jobError
+                : selectedSubjectSummary.status === "NOT_STARTED"
+                  ? "This subject does not have a generated lesson plan yet."
+                  : selectedSubjectSummary.status === "FAILED"
+                    ? "Lesson plan generation failed. Please retry from the subject card."
+                    : "Generation is running. The markdown preview will appear here automatically when ready."}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Refresh indicator */}
       {isRefetching && (

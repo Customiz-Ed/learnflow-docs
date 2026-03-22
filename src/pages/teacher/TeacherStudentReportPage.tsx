@@ -36,19 +36,47 @@ import type {
 
 const statusStyles: Record<ReportGenerationStatus, string> = {
   READY: "bg-success/10 text-success",
+  COMPLETED: "bg-success/10 text-success",
   QUEUED: "bg-primary/10 text-primary",
+  VALIDATION: "bg-primary/10 text-primary",
   PROCESSING: "bg-primary/10 text-primary",
+  STATUS_UPDATE: "bg-primary/10 text-primary",
+  GENERATION: "bg-primary/10 text-primary",
+  CALLBACK: "bg-primary/10 text-primary",
   FAILED: "bg-destructive/10 text-destructive",
   NOT_STARTED: "bg-muted text-muted-foreground",
 };
 
 const statusLabels: Record<ReportGenerationStatus, string> = {
   READY: "Ready",
+  COMPLETED: "Ready",
   QUEUED: "Queued",
+  VALIDATION: "Validation",
   PROCESSING: "Processing",
+  STATUS_UPDATE: "Status update",
+  GENERATION: "Generation",
+  CALLBACK: "Callback",
   FAILED: "Failed",
   NOT_STARTED: "Not started",
 };
+
+const inFlightReportStatuses: ReportGenerationStatus[] = [
+  "QUEUED",
+  "VALIDATION",
+  "PROCESSING",
+  "STATUS_UPDATE",
+  "GENERATION",
+  "CALLBACK",
+];
+
+const terminalReportStatuses: ReportGenerationStatus[] = [
+  "READY",
+  "COMPLETED",
+  "FAILED",
+  "NOT_STARTED",
+];
+
+const isReadyReportStatus = (status: ReportGenerationStatus) => status === "READY" || status === "COMPLETED";
 
 export default function TeacherStudentReportPage() {
   const { studentId = "" } = useParams<{ studentId: string }>();
@@ -94,7 +122,7 @@ export default function TeacherStudentReportPage() {
   useEffect(() => {
     if (!allSuiteReports.length) return;
     if (!activeReportId || !allSuiteReports.some((report) => report.id === activeReportId)) {
-      const preferred = allSuiteReports.find((report) => report.status === "READY") ?? allSuiteReports[0];
+      const preferred = allSuiteReports.find((report) => isReadyReportStatus(report.status)) ?? allSuiteReports[0];
       setActiveReportId(preferred.id);
     }
   }, [activeReportId, allSuiteReports]);
@@ -214,7 +242,7 @@ export default function TeacherStudentReportPage() {
   };
 
   const getReportRunState = (suite: TeacherReportSuitePreview, report: TeacherReportPreview): "idle" | "queueing" | "queued" => {
-    if (report.status === "QUEUED" || report.status === "PROCESSING") return "queued";
+    if (inFlightReportStatuses.includes(report.status)) return "queued";
 
     if (report.subject && triggerSubjectMutation.isPending && triggerSubjectMutation.variables?.subject === report.subject) {
       return "queueing";
@@ -224,11 +252,11 @@ export default function TeacherStudentReportPage() {
       return "queueing";
     }
 
-    if (report.subject && queuedSubjectKeys.includes(`${suite.id}:${report.subject}`)) {
+    if (report.subject && queuedSubjectKeys.includes(`${suite.id}:${report.subject}`) && !terminalReportStatuses.includes(report.status)) {
       return "queued";
     }
 
-    if (!report.subject && queuedSuiteIds.includes(suite.id)) {
+    if (!report.subject && queuedSuiteIds.includes(suite.id) && !terminalReportStatuses.includes(report.status)) {
       return "queued";
     }
 
@@ -445,7 +473,7 @@ export default function TeacherStudentReportPage() {
                 ))}
               </div>
 
-              <div className="grid gap-5 xl:grid-cols-[0.95fr_1.35fr]">
+              <div className="flex flex-col gap-5">
                 <div className="rounded-xl border border-border bg-muted/30 p-5">
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     Teacher Notes
@@ -501,8 +529,24 @@ function ReportTile({
   runState: "idle" | "queueing" | "queued";
   queueing: boolean;
 }) {
+  const queueHint =
+    inFlightReportStatuses.includes(report.status)
+      ? `Currently ${statusLabels[report.status].toLowerCase()}`
+      : "Queued for processing";
+
   return (
-    <Card className={active ? "border-primary bg-primary/5" : "border-border/70"}>
+    <Card
+      role="button"
+      tabIndex={0}
+      onClick={onOpen}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onOpen();
+        }
+      }}
+      className={`cursor-pointer ${active ? "border-primary bg-primary/5" : "border-border/70"}`}
+    >
       <CardContent className="pt-5">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -531,7 +575,14 @@ function ReportTile({
         </div>
 
         <div className="mt-4 flex flex-wrap gap-2">
-          <Button variant={active ? "default" : "outline"} size="sm" onClick={onOpen}>
+          <Button
+            variant={active ? "default" : "outline"}
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpen();
+            }}
+          >
             <FileText size={13} />
             Open
           </Button>
@@ -539,7 +590,10 @@ function ReportTile({
             variant="secondary"
             size="sm"
             disabled={!report.canTrigger || queueing}
-            onClick={onTrigger}
+            onClick={(e) => {
+              e.stopPropagation();
+              onTrigger();
+            }}
           >
             {runState === "queueing" ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} />}
             {runState === "queued" ? "Queued" : runState === "queueing" ? "Queueing..." : report.triggerLabel}
@@ -549,7 +603,7 @@ function ReportTile({
         {runState === "queued" && (
           <div className="mt-2 flex items-center gap-1.5 text-xs text-primary">
             <RefreshCcw size={12} />
-            Processing in queue
+            {queueHint}
           </div>
         )}
       </CardContent>

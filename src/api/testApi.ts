@@ -1,6 +1,7 @@
 import api from "./axios";
 import type {
   ApiResponse,
+  BaselineGenerationJobStatus,
   StudentBaselineSuitePayload,
   StartAttemptRequest,
   SubmitAttemptRequest,
@@ -65,7 +66,7 @@ export const testApi = {
     numberOfQuestions: number;
     difficulty: string;
   }) =>
-    api.post<ApiResponse<{ id: string; status: "QUEUED" | "PROCESSING" }>>("/tests/generate-baseline", data),
+    api.post<ApiResponse<{ id: string; status: BaselineGenerationJobStatus }>>("/tests/generate-baseline", data),
 
   getBaselineGenerationJob: (jobId: string) =>
     api.get<ApiResponse<TeacherBaselineGenerationJob & { generatedTest?: Test | null }>>(`/tests/generate-baseline/${jobId}`),
