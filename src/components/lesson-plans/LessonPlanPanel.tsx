@@ -7,7 +7,6 @@ import {
   useTeacherStudentLessonPlans,
   useTriggerSubjectLessonPlan,
   useLessonPlanPolling,
-  lessonPlanKeys,
 } from "@/hooks/useLessonPlanQueries";
 import { LessonPlanStudentView } from "./LessonPlanCard";
 import type { LessonPlanSubject } from "@/types/api.types";
@@ -26,7 +25,7 @@ interface LessonPlanPanelProps {
  * - Integrates seamlessly into report tab structure
  */
 export function LessonPlanPanel({ studentId, suiteId, isActive = true }: LessonPlanPanelProps) {
-  const [expandedSubject, setExpandedSubject] = useState<string | null>(null);
+  const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
 
   // Initial fetch without content for fast load
   const { data, isLoading, error, isFetching } = useTeacherStudentLessonPlans({
@@ -41,7 +40,7 @@ export function LessonPlanPanel({ studentId, suiteId, isActive = true }: LessonP
     studentId,
     suiteId,
     includeContent: true,
-    enabled: isActive && !!expandedSubject,
+    enabled: isActive && !!selectedSubject,
   });
 
   // Polling hook to auto-update when jobs are in-flight
@@ -64,6 +63,17 @@ export function LessonPlanPanel({ studentId, suiteId, isActive = true }: LessonP
       triggerMutation.reset();
     };
   }, []);
+
+  useEffect(() => {
+    if (!data?.subjectSummaries?.length) return;
+    if (!selectedSubject || !data.subjectSummaries.some((s) => s.subject === selectedSubject)) {
+      const preferred =
+        data.subjectSummaries.find((s) => s.status === "READY") ??
+        data.subjectSummaries.find((s) => s.status === "PROCESSING" || s.status === "QUEUED") ??
+        data.subjectSummaries[0];
+      setSelectedSubject(preferred.subject);
+    }
+  }, [data, selectedSubject]);
 
   const handleTrigger = (subject: LessonPlanSubject) => {
     if (!data) {
@@ -134,7 +144,7 @@ export function LessonPlanPanel({ studentId, suiteId, isActive = true }: LessonP
   }
 
   // Use expandedData for content if available, fall back to initial data
-  const displayData = expandedData && expandedSubject ? expandedData : data;
+  const displayData = expandedData && selectedSubject ? expandedData : data;
 
   return (
     <div className="space-y-4">
@@ -145,8 +155,8 @@ export function LessonPlanPanel({ studentId, suiteId, isActive = true }: LessonP
         isRefetching={isFetching}
         triggeringSubject={triggerMutation.isPending ? (triggerMutation.variables?.subject as LessonPlanSubject) : null}
         onTrigger={handleTrigger}
-        expandedSubject={expandedSubject}
-        onExpandSubject={setExpandedSubject}
+        expandedSubject={selectedSubject}
+        onExpandSubject={setSelectedSubject}
       />
     </div>
   );

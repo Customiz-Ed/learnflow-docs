@@ -1,6 +1,16 @@
 import type { BaselineSubject, ReportScope } from "@/types/api.types";
 
-export type ReportGenerationStatus = "READY" | "QUEUED" | "PROCESSING" | "FAILED" | "NOT_STARTED";
+export type ReportGenerationStatus =
+  | "READY"
+  | "COMPLETED"
+  | "QUEUED"
+  | "VALIDATION"
+  | "PROCESSING"
+  | "STATUS_UPDATE"
+  | "GENERATION"
+  | "CALLBACK"
+  | "FAILED"
+  | "NOT_STARTED";
 export type ReportSuiteKind = "BASELINE" | "MIDLINE" | "ENDLINE";
 
 export interface ReportMetric {

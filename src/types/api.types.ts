@@ -32,7 +32,15 @@ export type TestStatus = "DRAFT" | "ACTIVE" | "ARCHIVED";
 export type AttemptStatus = "IN_PROGRESS" | "SUBMITTED" | "EVALUATED";
 export type SuiteStatus = "PENDING" | "ACTIVE" | "COMPLETED";
 export type ReportScope = "SUBJECT" | "CUMULATIVE";
-export type BaselineGenerationJobStatus = "QUEUED" | "PROCESSING" | "COMPLETED" | "FAILED";
+export type BaselineGenerationJobStatus =
+  | "QUEUED"
+  | "VALIDATION"
+  | "PROCESSING"
+  | "STATUS_UPDATE"
+  | "GENERATION"
+  | "CALLBACK"
+  | "COMPLETED"
+  | "FAILED";
 export type LsaLearningStyle = "VISUAL" | "AUDITORY" | "KINESTHETIC";
 
 export type BaselineAttemptSummary = {
@@ -105,7 +113,17 @@ export type TriggerSubjectReportJob = {
   baselineSuiteId: string;
   reportScope: "SUBJECT";
   subject: BaselineSubject;
-  status: "QUEUED" | "PROCESSING" | "COMPLETED" | "FAILED";
+  status:
+    | "NOT_STARTED"
+    | "QUEUED"
+    | "VALIDATION"
+    | "PROCESSING"
+    | "STATUS_UPDATE"
+    | "GENERATION"
+    | "CALLBACK"
+    | "READY"
+    | "COMPLETED"
+    | "FAILED";
 };
 
 export type TriggerSubjectReportPayload = {
@@ -142,8 +160,13 @@ export type TriggerSuiteReportPayload = {
 
 export type ReportGenerationStatus =
   | "READY"
+  | "COMPLETED"
   | "QUEUED"
+  | "VALIDATION"
   | "PROCESSING"
+  | "STATUS_UPDATE"
+  | "GENERATION"
+  | "CALLBACK"
   | "FAILED"
   | "NOT_STARTED";
 
