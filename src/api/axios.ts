@@ -21,7 +21,11 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const status = error.response?.status;
+    const requestUrl = String(error.config?.url ?? "");
+    const isAuthLoginRequest = /\/(admins|teachers|students|parents)\/login\/?$/.test(requestUrl);
+
+    if (status === 401 && !isAuthLoginRequest) {
       localStorage.removeItem("token");
       localStorage.removeItem("role");
       localStorage.removeItem("userId");

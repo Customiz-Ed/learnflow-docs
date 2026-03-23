@@ -29,12 +29,14 @@ export function LoginForm({ role, title, subtitle, fields, onSubmit, registerLin
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setSubmitError(null);
     try {
       const result = await onSubmit(formData);
       login(result.token, role, result.id, result.name);
@@ -42,8 +44,12 @@ export function LoginForm({ role, title, subtitle, fields, onSubmit, registerLin
       navigate(result.redirectTo || `/${role}/dashboard`);
     } catch (err: unknown) {
       if (isAxiosError(err)) {
-        toast.error(err.response?.data?.message || "Login failed");
+        const status = err.response?.status;
+        const message = status === 401 ? "Invalid credentials" : err.response?.data?.message || "Login failed";
+        setSubmitError(message);
+        toast.error(message);
       } else {
+        setSubmitError("Login failed");
         toast.error("Login failed");
       }
     } finally {
@@ -103,7 +109,10 @@ export function LoginForm({ role, title, subtitle, fields, onSubmit, registerLin
                     placeholder={field.placeholder}
                     required={field.required !== false}
                     value={formData[field.name] || ""}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, [field.name]: e.target.value }))}
+                      onChange={(e) => {
+                        setFormData((prev) => ({ ...prev, [field.name]: e.target.value }));
+                        if (submitError) setSubmitError(null);
+                      }}
                     className="h-11 w-full rounded-lg bg-muted px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
                   />
                   {field.type === "password" && (
@@ -135,6 +144,12 @@ export function LoginForm({ role, title, subtitle, fields, onSubmit, registerLin
                 </>
               )}
             </motion.button>
+
+            {submitError && (
+              <p className="text-sm font-medium text-destructive" role="alert" aria-live="polite">
+                {submitError}
+              </p>
+            )}
           </form>
 
           {registerLink && (
