@@ -24,6 +24,53 @@ type JobView = {
   errorMessage: string | null;
 };
 
+const jobStageOrder: BaselineGenerationJobStatus[] = [
+  "QUEUED",
+  "VALIDATION",
+  "PROCESSING",
+  "STATUS_UPDATE",
+  "GENERATION",
+  "CALLBACK",
+  "COMPLETED",
+  "FAILED",
+];
+
+const terminalStatuses: BaselineGenerationJobStatus[] = ["COMPLETED", "FAILED"];
+
+const jobStatusLabels: Record<BaselineGenerationJobStatus, string> = {
+  QUEUED: "Queued",
+  VALIDATION: "Validation",
+  PROCESSING: "Processing",
+  STATUS_UPDATE: "Status update",
+  GENERATION: "Generation",
+  CALLBACK: "Callback",
+  COMPLETED: "Completed",
+  FAILED: "Failed",
+};
+
+const jobStatusTone: Record<BaselineGenerationJobStatus, string> = {
+  QUEUED: "text-primary",
+  VALIDATION: "text-primary",
+  PROCESSING: "text-primary",
+  STATUS_UPDATE: "text-primary",
+  GENERATION: "text-primary",
+  CALLBACK: "text-primary",
+  COMPLETED: "text-success",
+  FAILED: "text-destructive",
+};
+
+const getJobProgressPercent = (status: BaselineGenerationJobStatus) => {
+  if (status === "COMPLETED" || status === "FAILED") return 100;
+  const currentStage = Math.max(jobStageOrder.indexOf(status) + 1, 1);
+  return Math.round((currentStage / jobStageOrder.length) * 100);
+};
+
+const getJobProgressTone = (status: BaselineGenerationJobStatus) => {
+  if (status === "FAILED") return "bg-destructive";
+  if (status === "COMPLETED") return "bg-success";
+  return "bg-primary";
+};
+
 export default function TeacherGenerateBaselineTest() {
   const navigate = useNavigate();
   const [file, setFile] = useState<File | null>(null);
@@ -39,7 +86,7 @@ export default function TeacherGenerateBaselineTest() {
     classId: "",
     divisionId: "",
     testName: "",
-    numberOfQuestions: "10",
+    numberOfQuestions: "20",
     difficulty: "Easy",
   });
 
@@ -114,9 +161,9 @@ export default function TeacherGenerateBaselineTest() {
         const response = await testApi.getBaselineGenerationJob(jobId);
         return response.data.data;
       },
-      intervalMs: 9000,
+      intervalMs: 5000,
       timeoutMs: 10 * 60 * 1000,
-      stopCondition: (data) => data.status === "COMPLETED" || data.status === "FAILED",
+      stopCondition: (data) => terminalStatuses.includes(data.status),
       onTick: (data) => {
         setJobs((prev) =>
           prev.map((job) =>
@@ -143,7 +190,7 @@ export default function TeacherGenerateBaselineTest() {
   };
 
   useEffect(() => {
-    const allFinished = jobs.length > 0 && jobs.every((job) => job.status === "COMPLETED" || job.status === "FAILED");
+    const allFinished = jobs.length > 0 && jobs.every((job) => terminalStatuses.includes(job.status));
     if (allFinished) setPhase("done");
   }, [jobs]);
 
@@ -293,8 +340,17 @@ export default function TeacherGenerateBaselineTest() {
                 <div key={job.id} className="rounded-lg bg-muted p-3">
                   <div className="flex items-center justify-between">
                     <span className="font-medium text-foreground">{job.subject}</span>
-                    <span className="text-sm text-muted-foreground">{job.status}</span>
+                    <span className={`text-sm ${jobStatusTone[job.status]}`}>{jobStatusLabels[job.status]}</span>
                   </div>
+                  <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-background/70">
+                    <div
+                      className={`h-full rounded-full transition-all duration-300 ${getJobProgressTone(job.status)}`}
+                      style={{ width: `${getJobProgressPercent(job.status)}%` }}
+                    />
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Pipeline stage {Math.max(jobStageOrder.indexOf(job.status) + 1, 1)}/{jobStageOrder.length}
+                  </p>
                   {job.errorMessage && <p className="mt-1 text-sm text-destructive">{job.errorMessage}</p>}
                 </div>
               ))}

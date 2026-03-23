@@ -21,19 +21,40 @@ import type { BaselineSubject, StudentBaselineReport } from "@/types/api.types";
 
 const statusStyles: Record<ReportGenerationStatus, string> = {
   READY: "bg-success/10 text-success",
+  COMPLETED: "bg-success/10 text-success",
   QUEUED: "bg-primary/10 text-primary",
+  VALIDATION: "bg-primary/10 text-primary",
   PROCESSING: "bg-primary/10 text-primary",
+  STATUS_UPDATE: "bg-primary/10 text-primary",
+  GENERATION: "bg-primary/10 text-primary",
+  CALLBACK: "bg-primary/10 text-primary",
   FAILED: "bg-destructive/10 text-destructive",
   NOT_STARTED: "bg-muted text-muted-foreground",
 };
 
 const statusLabels: Record<ReportGenerationStatus, string> = {
   READY: "Ready",
+  COMPLETED: "Ready",
   QUEUED: "Queued",
+  VALIDATION: "Validation",
   PROCESSING: "Processing",
+  STATUS_UPDATE: "Status update",
+  GENERATION: "Generation",
+  CALLBACK: "Callback",
   FAILED: "Failed",
   NOT_STARTED: "Not started",
 };
+
+const inFlightReportStatuses: ReportGenerationStatus[] = [
+  "QUEUED",
+  "VALIDATION",
+  "PROCESSING",
+  "STATUS_UPDATE",
+  "GENERATION",
+  "CALLBACK",
+];
+
+const isReadyReportStatus = (status: ReportGenerationStatus) => status === "READY" || status === "COMPLETED";
 
 export default function StudentReportPage() {
   const { userName } = useAuth();
@@ -73,7 +94,7 @@ export default function StudentReportPage() {
   useEffect(() => {
     if (!allReports.length) return;
     if (!allReports.some((report) => report.id === activeReportId)) {
-      const preferredReport = allReports.find((report) => report.status === "READY") ?? allReports[0];
+      const preferredReport = allReports.find((report) => isReadyReportStatus(report.status)) ?? allReports[0];
       setActiveReportId(preferredReport.id);
     }
   }, [activeReportId, allReports]);
@@ -83,8 +104,8 @@ export default function StudentReportPage() {
   const totals = useMemo(() => {
     const suiteReports = suites.flatMap((suite) => [...suite.subjectReports, suite.cumulativeReport]);
     return {
-      ready: suiteReports.filter((report) => report.status === "READY").length,
-      inFlight: suiteReports.filter((report) => report.status === "QUEUED" || report.status === "PROCESSING").length,
+      ready: suiteReports.filter((report) => isReadyReportStatus(report.status)).length,
+      inFlight: suiteReports.filter((report) => inFlightReportStatuses.includes(report.status)).length,
       pending: suiteReports.filter((report) => report.status === "NOT_STARTED").length,
     };
   }, [suites]);
